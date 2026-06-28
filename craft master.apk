@@ -1,0 +1,74 @@
+const intersects = raycaster.intersectObjects(blocks);
+if (intersects.length > 0) {
+const hit = intersects[0];
+if (currentMode === 'break') {
+if (hit.object.position.y > 0) {
+scene.remove(hit.object);
+blocks.splice(blocks.indexOf(hit.object), 1);
+}
+} else {
+const buildPos = hit.object.position.clone().add(hit.face.normal);
+if (!blocks.some(b => b.position.equals(buildPos))) {
+createBlock(buildPos.x, buildPos.y, buildPos.z, selectedColor);
+}
+}
+}
+}
+});
+document.getElementById('btn-break').addEventListener('click', () => {
+currentMode = 'break';
+document.getElementById('btn-break').className = 'btn active';
+document.getElementById('btn-place').className = 'btn';
+});
+document.getElementById('btn-place').addEventListener('click', () => {
+currentMode = 'place';
+document.getElementById('btn-place').className = 'btn active';
+document.getElementById('btn-break').className = 'btn';
+});
+const slots = document.querySelectorAll('.slot');
+slots.forEach(slot => {
+slot.addEventListener('click', () => {
+slots.forEach(s => s.classList.remove('selected'));
+slot.classList.add('selected');
+selectedColor = parseInt(slot.dataset.color);
+});
+});
+window.addEventListener('resize', () => {
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+});
+function animate() {
+requestAnimationFrame(animate);
+if (joystickActive) {
+playerPos.x += moveX;
+playerPos.z += moveZ;
+}
+playerVelocityY += GRAVITY;
+playerPos.y += playerVelocityY;
+isGrounded = false;
+let standingY = -999;
+for (let i = 0; i < blocks.length; i++) {
+const b = blocks[i].position;
+if (Math.abs(playerPos.x - b.x) < 0.6 && Math.abs(playerPos.z - b.z) < 0.6) {
+if (playerPos.y >= b.y + 0.5 && b.y + 1 > standingY) {
+standingY = b.y + 1;
+}
+}
+}
+if (playerPos.y <= standingY) {
+playerPos.y = standingY;
+playerVelocityY = 0;
+isGrounded = true;
+}
+if (playerPos.y < -10) {
+playerPos.set(5, 3, 5);
+playerVelocityY = 0;
+}
+updateCamera();
+renderer.render(scene, camera);
+}
+animate();
+
+
+}
